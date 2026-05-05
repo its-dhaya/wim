@@ -70,27 +70,14 @@ Install-IfMissing -Name "fd"      -WingetId "sharkdp.fd"               -Command 
 Install-IfMissing -Name "fzf"     -WingetId "junegunn.fzf"             -Command "fzf"
 Install-IfMissing -Name "Zig"     -WingetId "zig.zig"                  -Command "zig"
 
-# ---- Install Nerd Font -------------------------------------
-Write-Header "Installing Nerd Font (JetBrainsMono)..."
-
-$fontUrl  = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
-$fontDest = "$env:TEMP\JetBrainsMono.zip"
-$fontDir  = "$env:TEMP\JetBrainsMonoFont"
-
-try {
-    Write-Step "Downloading JetBrainsMono Nerd Font..."
-    Invoke-WebRequest -Uri $fontUrl -OutFile $fontDest -UseBasicParsing
-    Expand-Archive -Path $fontDest -DestinationPath $fontDir -Force
-    $fonts = Get-ChildItem $fontDir -Filter "*.ttf" | Where-Object { $_.Name -notlike "*Windows*" }
-    $fontFolder = (New-Object -ComObject Shell.Application).Namespace(0x14)
-    foreach ($font in $fonts) {
-        $fontFolder.CopyHere($font.FullName, 0x10)
-    }
-    Write-Ok "JetBrainsMono Nerd Font installed"
-    Write-Warn "Set font to JetBrainsMono Nerd Font in Windows Terminal settings"
-} catch {
-    Write-Warn "Font download failed - install manually from nerdfonts.com"
-}
+# ---- Nerd Font (manual instruction, skip auto download) ----
+Write-Header "Nerd Font setup..."
+Write-Skip "Skipping auto font download (install manually for best results)"
+Write-Warn "ACTION NEEDED: Install JetBrainsMono Nerd Font manually:"
+Write-Host "  1. Go to: https://www.nerdfonts.com/font-downloads" -ForegroundColor White
+Write-Host "  2. Download: JetBrainsMono" -ForegroundColor White
+Write-Host "  3. Extract, select all .ttf files, right-click -> Install" -ForegroundColor White
+Write-Host "  4. In Windows Terminal: Settings -> your profile -> Font -> JetBrainsMono Nerd Font" -ForegroundColor White
 
 # ---- Deploy WIM config -------------------------------------
 Write-Header "Deploying WIM config..."
@@ -107,7 +94,7 @@ if (Test-Path $nvimConfig) {
 
 Write-Step "Copying WIM config to $nvimConfig..."
 Copy-Item -Path "$wimSource\config" -Destination $nvimConfig -Recurse -Force
-Write-Ok "WIM config deployed"
+Write-Ok "WIM config deployed to $nvimConfig"
 
 # ---- Detect PowerShell -------------------------------------
 $psExe = $null
