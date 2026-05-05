@@ -75,6 +75,41 @@ if vim.fn.has("win32") == 1 then
     vim.fn.setenv("NVIM_WIN_PATHS", "1")
 end
 
+-- ---- WSL path confusion fix ------------------------------------
+-- When WSL is installed alongside Windows Neovim, LSP servers
+-- sometimes return /mnt/c/... paths instead of C:\... paths.
+-- This normalizes all paths to Windows format.
+if vim.fn.has("win32") == 1 then
+    -- Detect if WSL is present
+    local wsl_check = vim.fn.system("wsl --status 2>nul")
+    local has_wsl   = vim.v.shell_error == 0
+
+    if has_wsl then
+        -- Override LSP path handling to normalize WSL paths
+        local orig_uri_to_fname = vim.uri_to_fname
+        vim.uri_to_fname = function(uri)
+            local fname = orig_uri_to_fname(uri)
+            -- Convert /mnt/c/... to C:\...
+            fname = fname:gsub("^/mnt/(%a)/", function(drive)
+                return drive:upper() .. ":\"
+            end)
+            -- Normalize remaining forward slashes
+            fname = fname:gsub("/", "\")
+            return fname
+        end
+
+        local orig_fname_to_uri = vim.uri_from_fname
+        vim.uri_from_fname = function(fname)
+            -- Normalize Windows paths before converting to URI
+            fname = fname:gsub("\", "/")
+            fname = fname:gsub("^(%a):/", function(drive)
+                return "/" .. drive:lower() .. "/"
+            end)
+            return orig_fname_to_uri(fname)
+        end
+    end
+end
+
 -- ---- Performance -------------------------------------------
 opt.updatetime     = 200          -- faster CursorHold events
 opt.timeoutlen     = 300          -- which-key popup delay

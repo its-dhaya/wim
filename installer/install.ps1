@@ -68,7 +68,8 @@ Install-IfMissing -Name "Python"  -WingetId "Python.Python.3.12"       -Command 
 Install-IfMissing -Name "ripgrep" -WingetId "BurntSushi.ripgrep.MSVC"  -Command "rg"
 Install-IfMissing -Name "fd"      -WingetId "sharkdp.fd"               -Command "fd"
 Install-IfMissing -Name "fzf"     -WingetId "junegunn.fzf"             -Command "fzf"
-Install-IfMissing -Name "Zig"     -WingetId "zig.zig"                  -Command "zig"
+Install-IfMissing -Name "Zig"      -WingetId "zig.zig"                  -Command "zig"
+Install-IfMissing -Name "win32yank" -WingetId "win32yank.win32yank"      -Command "win32yank"     -WingetId "zig.zig"                  -Command "zig"
 
 # ---- Nerd Font (targeted download - 4 files only ~1.2MB) -----------------
 Write-Header "Installing Nerd Font (JetBrainsMono)..."
@@ -167,6 +168,24 @@ if ($psExe -ne $null) {
     Write-Ok "Shell configured: $psExe"
 }
 
+# ---- WSL detection ------------------------------------------------
+Write-Header "Checking WSL status..."
+
+$wslInstalled = $false
+try {
+    $wslOutput = wsl --status 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        $wslInstalled = $true
+    }
+} catch {}
+
+if ($wslInstalled) {
+    Write-Warn "WSL detected - WIM will auto-normalize WSL paths in LSP"
+    Write-Ok "WSL path conflict protection enabled"
+} else {
+    Write-Skip "WSL not detected - path normalization not needed"
+}
+
 # ---- Mason PATH fix ------------------------------------------------
 Write-Header "Configuring Mason PATH..."
 
@@ -259,7 +278,8 @@ $checks = @(
     @{ Name = "python"; Label = "Python"  },
     @{ Name = "rg";     Label = "ripgrep" },
     @{ Name = "fd";     Label = "fd"      },
-    @{ Name = "zig";    Label = "Zig"     }
+    @{ Name = "zig";       Label = "Zig"       },
+    @{ Name = "win32yank"; Label = "win32yank" }
 )
 
 $allGood = $true

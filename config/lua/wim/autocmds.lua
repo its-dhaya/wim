@@ -66,6 +66,56 @@ autocmd("FileType", {
     end,
 })
 
+-- ---- Windows: clipboard reconnect after sleep/wake ---------------
+-- win32yank sometimes stops working after Windows sleep.
+-- This auto-reconnects it when Neovim regains focus.
+if vim.fn.has("win32") == 1 then
+    augroup("ClipboardReconnect", { clear = true })
+    autocmd("FocusGained", {
+        group    = "ClipboardReconnect",
+        callback = function()
+            -- Re-register the clipboard provider on focus
+            vim.g.clipboard = {
+                name  = "win32yank",
+                copy  = {
+                    ["+"] = "win32yank.exe -i --crlf",
+                    ["*"] = "win32yank.exe -i --crlf",
+                },
+                paste = {
+                    ["+"] = "win32yank.exe -o --lf",
+                    ["*"] = "win32yank.exe -o --lf",
+                },
+                cache_enabled = 0,
+            }
+            -- Silently verify win32yank is still responsive
+            local ok = pcall(vim.fn.system, "win32yank.exe -o --lf")
+            if not ok then
+                vim.notify(
+                    "WIM: Clipboard reconnect failed. Try :WimClipboardFix",
+                    vim.log.levels.WARN
+                )
+            end
+        end,
+    })
+
+    -- Manual fix command if auto-reconnect fails
+    vim.api.nvim_create_user_command("WimClipboardFix", function()
+        vim.g.clipboard = {
+            name  = "win32yank",
+            copy  = {
+                ["+"] = "win32yank.exe -i --crlf",
+                ["*"] = "win32yank.exe -i --crlf",
+            },
+            paste = {
+                ["+"] = "win32yank.exe -o --lf",
+                ["*"] = "win32yank.exe -o --lf",
+            },
+            cache_enabled = 0,
+        }
+        vim.notify("WIM: Clipboard reconnected", vim.log.levels.INFO)
+    end, { desc = "WIM: Reconnect win32yank clipboard" })
+end
+
 -- ---- Windows: fix line endings on paste --------------------
 if vim.fn.has("win32") == 1 then
     augroup("WindowsCRLF", { clear = true })
