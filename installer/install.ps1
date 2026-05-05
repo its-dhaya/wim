@@ -70,14 +70,52 @@ Install-IfMissing -Name "fd"      -WingetId "sharkdp.fd"               -Command 
 Install-IfMissing -Name "fzf"     -WingetId "junegunn.fzf"             -Command "fzf"
 Install-IfMissing -Name "Zig"     -WingetId "zig.zig"                  -Command "zig"
 
-# ---- Nerd Font (manual instruction, skip auto download) ----
-Write-Header "Nerd Font setup..."
-Write-Skip "Skipping auto font download (install manually for best results)"
-Write-Warn "ACTION NEEDED: Install JetBrainsMono Nerd Font manually:"
-Write-Host "  1. Go to: https://www.nerdfonts.com/font-downloads" -ForegroundColor White
-Write-Host "  2. Download: JetBrainsMono" -ForegroundColor White
-Write-Host "  3. Extract, select all .ttf files, right-click -> Install" -ForegroundColor White
-Write-Host "  4. In Windows Terminal: Settings -> your profile -> Font -> JetBrainsMono Nerd Font" -ForegroundColor White
+# ---- Nerd Font (targeted download - 4 files only ~1.2MB) -----------------
+Write-Header "Installing Nerd Font (JetBrainsMono)..."
+
+$fontBase  = "https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/JetBrainsMono/Ligatures"
+$fontFiles = @(
+    @{ Url = "$fontBase/Regular/JetBrainsMonoNerdFont-Regular.ttf";       Name = "JetBrainsMonoNerdFont-Regular.ttf"       },
+    @{ Url = "$fontBase/Bold/JetBrainsMonoNerdFont-Bold.ttf";             Name = "JetBrainsMonoNerdFont-Bold.ttf"           },
+    @{ Url = "$fontBase/Italic/JetBrainsMonoNerdFont-Italic.ttf";         Name = "JetBrainsMonoNerdFont-Italic.ttf"         },
+    @{ Url = "$fontBase/BoldItalic/JetBrainsMonoNerdFont-BoldItalic.ttf"; Name = "JetBrainsMonoNerdFont-BoldItalic.ttf"    }
+)
+$fontTempDir = "$env:TEMP\WimFonts"
+$fontShell   = (New-Object -ComObject Shell.Application).Namespace(0x14)
+
+$regPath = "HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+$alreadyInstalled = $false
+if (Test-Path $regPath) {
+    $installedFonts = Get-ItemProperty $regPath -ErrorAction SilentlyContinue
+    if ($installedFonts -and ($installedFonts.PSObject.Properties.Name -like "*JetBrainsMono*")) {
+        $alreadyInstalled = $true
+    }
+}
+
+if ($alreadyInstalled) {
+    Write-Skip "JetBrainsMono Nerd Font already installed"
+} else {
+    New-Item -ItemType Directory -Force -Path $fontTempDir | Out-Null
+    $allOk = $true
+    foreach ($font in $fontFiles) {
+        try {
+            Write-Step "Downloading $($font.Name)..."
+            $dest = "$fontTempDir\$($font.Name)"
+            Invoke-WebRequest -Uri $font.Url -OutFile $dest -UseBasicParsing -TimeoutSec 30
+            $fontShell.CopyHere($dest, 0x10)
+        } catch {
+            Write-Warn "Failed: $($font.Name)"
+            $allOk = $false
+        }
+    }
+    if ($allOk) {
+        Write-Ok "JetBrainsMono Nerd Font installed (4 files ~1.2MB)"
+        Write-Warn "ACTION: Windows Terminal -> Settings -> Profile -> Font -> JetBrainsMono Nerd Font"
+    } else {
+        Write-Warn "Some fonts failed - install manually from nerdfonts.com/font-downloads"
+    }
+    Remove-Item -Recurse -Force $fontTempDir -ErrorAction SilentlyContinue
+}
 
 # ---- Deploy WIM config -------------------------------------
 Write-Header "Deploying WIM config..."
@@ -128,7 +166,7 @@ $checks = @(
 $allGood = $true
 foreach ($check in $checks) {
     if (Get-Command $check.Name -ErrorAction SilentlyContinue) {
-        $ver = & $check.Name --version 2>&1 | Select-Object -First 1
+        if ($check.Name -eq "zig") { $ver = "installed" } else { $ver = & $check.Name --version 2>&1 | Select-Object -First 1 }
         Write-Ok "$($check.Label) - $ver"
     } else {
         Write-Fail "$($check.Label) not found in PATH"
