@@ -5,7 +5,7 @@
 
 return {
     {
-        "neovim/nvim-lspconfig",
+        "neovim/nvim-lspconfig", tag = "v2.1.0",
         event        = "BufReadPre",
         dependencies = {
             -- Mason: LSP installer, Windows-aware config
