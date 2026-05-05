@@ -167,6 +167,31 @@ if ($psExe -ne $null) {
     Write-Ok "Shell configured: $psExe"
 }
 
+# ---- Mason PATH fix ------------------------------------------------
+Write-Header "Configuring Mason PATH..."
+
+$masonBin = "$env:LOCALAPPDATA\nvim-data\mason\bin"
+
+# Create mason bin dir if it doesn't exist yet (first install)
+if (-not (Test-Path $masonBin)) {
+    New-Item -ItemType Directory -Force -Path $masonBin | Out-Null
+    Write-Step "Created Mason bin directory"
+}
+
+# Check if already in user PATH
+$userPath = [System.Environment]::GetEnvironmentVariable("PATH", "User")
+if ($userPath -split ";" -contains $masonBin) {
+    Write-Skip "Mason bin already in PATH"
+} else {
+    # Add to user PATH permanently
+    $newPath = $userPath.TrimEnd(";") + ";" + $masonBin
+    [System.Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
+    # Also update current session
+    $env:PATH = $env:PATH.TrimEnd(";") + ";" + $masonBin
+    Write-Ok "Mason bin added to PATH: $masonBin"
+    Write-Warn "LSP servers installed by Mason will now be accessible system-wide"
+}
+
 # ---- Git CRLF configuration ----------------------------------------
 Write-Header "Configuring Git line endings..."
 

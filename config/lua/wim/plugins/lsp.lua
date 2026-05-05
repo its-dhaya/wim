@@ -14,6 +14,8 @@ return {
                 opts = {
                     -- Windows: install to a path with no spaces
                     install_root_dir = vim.fn.stdpath("data") .. "\\mason",
+                    -- Windows: prepend mason bin to PATH so LSPs work system-wide
+                    PATH = "prepend",
                     ui = {
                         border = "rounded",
                         icons  = { package_installed = "✓", package_pending = "➜", package_uninstalled = "✗" },
