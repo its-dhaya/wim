@@ -26,7 +26,7 @@ return {
         },
     },
 
-    -- ---- Treesitter (syntax highlighting) -------------------
+    -- ---- Treesitter (syntax highlighting) ------------------
     {
         "nvim-treesitter/nvim-treesitter",
         build  = ":TSUpdate",
@@ -96,6 +96,12 @@ return {
                 },
             })
         end,
+    },
+
+    -- ---- Editorconfig (respects per-project .editorconfig) ------
+    {
+        "editorconfig/editorconfig-vim",
+        event = "BufReadPre",
     },
 
     -- ---- Autopairs -----------------------------------------
