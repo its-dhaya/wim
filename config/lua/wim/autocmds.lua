@@ -1,0 +1,81 @@
+-- ============================================================
+--  WIM — autocmds.lua
+-- ============================================================
+
+local augroup = vim.api.nvim_create_augroup
+local autocmd = vim.api.nvim_create_autocmd
+
+-- ---- Highlight on yank -------------------------------------
+augroup("YankHighlight", { clear = true })
+autocmd("TextYankPost", {
+    group    = "YankHighlight",
+    callback = function()
+        vim.highlight.on_yank({ higroup = "IncSearch", timeout = 150 })
+    end,
+})
+
+-- ---- Remove trailing whitespace on save --------------------
+augroup("TrimWhitespace", { clear = true })
+autocmd("BufWritePre", {
+    group   = "TrimWhitespace",
+    pattern = "*",
+    command = "%s/\\s\\+$//e",
+})
+
+-- ---- Restore cursor position on file open ------------------
+augroup("RestoreCursor", { clear = true })
+autocmd("BufReadPost", {
+    group    = "RestoreCursor",
+    callback = function()
+        local mark = vim.api.nvim_buf_get_mark(0, '"')
+        local line_count = vim.api.nvim_buf_line_count(0)
+        if mark[1] > 0 and mark[1] <= line_count then
+            pcall(vim.api.nvim_win_set_cursor, 0, mark)
+        end
+    end,
+})
+
+-- ---- Auto resize splits on terminal resize -----------------
+augroup("AutoResize", { clear = true })
+autocmd("VimResized", {
+    group   = "AutoResize",
+    command = "tabdo wincmd =",
+})
+
+-- ---- Filetype specific settings ----------------------------
+augroup("FileTypeSettings", { clear = true })
+
+-- JS/TS — 2 space indent
+autocmd("FileType", {
+    group   = "FileTypeSettings",
+    pattern = { "javascript", "typescript", "javascriptreact",
+                "typescriptreact", "json", "html", "css", "scss" },
+    callback = function()
+        vim.opt_local.tabstop    = 2
+        vim.opt_local.shiftwidth = 2
+    end,
+})
+
+-- Python — 4 space (PEP8)
+autocmd("FileType", {
+    group   = "FileTypeSettings",
+    pattern = "python",
+    callback = function()
+        vim.opt_local.tabstop    = 4
+        vim.opt_local.shiftwidth = 4
+    end,
+})
+
+-- ---- Windows: fix line endings on paste --------------------
+if vim.fn.has("win32") == 1 then
+    augroup("WindowsCRLF", { clear = true })
+    autocmd("BufReadPost", {
+        group    = "WindowsCRLF",
+        callback = function()
+            -- Silently convert CRLF to LF in memory
+            if vim.bo.modifiable then
+                vim.cmd("silent! %s/\\r//g")
+            end
+        end,
+    })
+end
