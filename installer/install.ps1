@@ -168,6 +168,24 @@ if ($psExe -ne $null) {
     Write-Ok "Shell configured: $psExe"
 }
 
+# ---- Terminal detection -------------------------------------------
+Write-Header "Detecting terminal..."
+
+$terminal = "unknown"
+if ($env:WT_SESSION) {
+    $terminal = "Windows Terminal"
+    Write-Ok "Windows Terminal detected - full truecolor + transparency enabled"
+} elseif ($env:ALACRITTY_LOG) {
+    $terminal = "Alacritty"
+    Write-Ok "Alacritty detected - truecolor enabled"
+} elseif ($env:ConEmuPID) {
+    $terminal = "ConEmu"
+    Write-Warn "ConEmu detected - limited color support, undercurl disabled"
+} else {
+    Write-Warn "Terminal not recognized - using safe defaults"
+    Write-Host "  Recommended: install Windows Terminal from the Microsoft Store" -ForegroundColor DarkGray
+}
+
 # ---- WSL detection ------------------------------------------------
 Write-Header "Checking WSL status..."
 

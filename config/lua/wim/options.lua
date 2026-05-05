@@ -75,6 +75,50 @@ if vim.fn.has("win32") == 1 then
     vim.fn.setenv("NVIM_WIN_PATHS", "1")
 end
 
+-- ---- Windows Terminal auto detection ---------------------------
+-- Detects which terminal is running and configures accordingly.
+-- Supports: Windows Terminal, Alacritty, ConEmu, Cmder, plain cmd
+if vim.fn.has("win32") == 1 then
+    local function detect_terminal()
+        -- WT_SESSION is only set by Windows Terminal
+        if vim.fn.getenv("WT_SESSION") ~= vim.NIL then
+            return "windows-terminal"
+        end
+        -- Alacritty sets this env var
+        if vim.fn.getenv("ALACRITTY_LOG") ~= vim.NIL then
+            return "alacritty"
+        end
+        -- ConEmu sets this
+        if vim.fn.getenv("ConEmuPID") ~= vim.NIL then
+            return "conemu"
+        end
+        return "unknown"
+    end
+
+    local term = detect_terminal()
+    vim.g.wim_terminal = term
+
+    if term == "windows-terminal" then
+        -- Windows Terminal supports full truecolor + undercurl
+        vim.opt.termguicolors = true
+        vim.opt.pumblend      = 10    -- popup transparency
+        vim.opt.winblend      = 10    -- window transparency
+    elseif term == "alacritty" then
+        -- Alacritty supports truecolor
+        vim.opt.termguicolors = true
+        vim.opt.pumblend      = 0
+    elseif term == "conemu" then
+        -- ConEmu has limited true color support
+        vim.opt.termguicolors = true
+        -- Disable undercurl as ConEmu doesn't support it
+        vim.cmd("hi DiagnosticUnderlineError gui=underline")
+        vim.cmd("hi DiagnosticUnderlineWarn  gui=underline")
+    else
+        -- Unknown terminal - safe fallbacks
+        vim.opt.termguicolors = true
+    end
+end
+
 -- ---- WSL path confusion fix ------------------------------------
 -- When WSL is installed alongside Windows Neovim, LSP servers
 -- sometimes return /mnt/c/... paths instead of C:\... paths.

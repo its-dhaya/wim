@@ -66,6 +66,29 @@ autocmd("FileType", {
     end,
 })
 
+-- ---- WimInfo command ---------------------------------------------
+vim.api.nvim_create_user_command("WimInfo", function()
+    local lines = {
+        "  WIM - Windows Integrated Modular Neovim",
+        "  ─────────────────────────────────────────",
+        "  Terminal : " .. (vim.g.wim_terminal or "unknown"),
+        "  OS       : " .. vim.loop.os_uname().sysname,
+        "  Neovim   : " .. tostring(vim.version()),
+        "  Config   : " .. vim.fn.stdpath("config"),
+        "  Data     : " .. vim.fn.stdpath("data"),
+        "  WSL      : " .. (vim.fn.getenv("WSL_DISTRO_NAME") ~= vim.NIL and "yes" or "no"),
+        "",
+        "  Commands:",
+        "  :WimInfo          - show this screen",
+        "  :WimClipboardFix  - reconnect clipboard after sleep",
+        "  :checkhealth      - full health check",
+        "  :Lazy             - plugin manager",
+        "  :Mason            - LSP manager",
+    }
+    vim.notify(table.concat(lines, "
+"), vim.log.levels.INFO, { title = "WIM" })
+end, { desc = "WIM: Show system info" })
+
 -- ---- Windows: clipboard reconnect after sleep/wake ---------------
 -- win32yank sometimes stops working after Windows sleep.
 -- This auto-reconnects it when Neovim regains focus.
