@@ -27,7 +27,7 @@ WIM fixes all of this. One installer. Zero config. Works on day one.
 Open PowerShell as Administrator and run:
 
 ```powershell
-git clone https://github.com/yourusername/wim.git
+git clone https://github.com/its-dhaya/wim.git
 cd wim
 powershell -ExecutionPolicy Bypass -File installer\install.ps1
 ```
