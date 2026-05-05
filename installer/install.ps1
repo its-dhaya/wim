@@ -150,6 +150,50 @@ if ($psExe -ne $null) {
     Write-Ok "Shell configured: $psExe"
 }
 
+# ---- Windows Defender exclusions ----------------------------------
+Write-Header "Configuring Windows Defender exclusions..."
+
+$exclusions = @(
+    "$env:LOCALAPPDATA\nvim",
+    "$env:LOCALAPPDATA\nvim-data",
+    $(if (Get-Command nvim -ErrorAction SilentlyContinue) { (Get-Command nvim).Source } else { $null })
+)
+
+$addedAny = $false
+foreach ($path in $exclusions) {
+    if ($path -and (Test-Path $path -ErrorAction SilentlyContinue)) {
+        try {
+            $existing = (Get-MpPreference).ExclusionPath
+            if ($existing -notcontains $path) {
+                Add-MpPreference -ExclusionPath $path -ErrorAction Stop
+                Write-Ok "Excluded: $path"
+                $addedAny = $true
+            } else {
+                Write-Skip "Already excluded: $path"
+            }
+        } catch {
+            Write-Warn "Could not add exclusion for $path (run as Administrator for this)"
+        }
+    }
+}
+
+# Also exclude neovim process itself
+try {
+    $existing = (Get-MpPreference).ExclusionProcess
+    if ($existing -notcontains "nvim.exe") {
+        Add-MpPreference -ExclusionProcess "nvim.exe" -ErrorAction Stop
+        Write-Ok "Excluded process: nvim.exe"
+    } else {
+        Write-Skip "nvim.exe process already excluded"
+    }
+} catch {
+    Write-Warn "Could not exclude nvim.exe process (run as Administrator for this)"
+}
+
+if ($addedAny) {
+    Write-Ok "Defender exclusions configured - startup will be significantly faster"
+} 
+
 # ---- Health check ------------------------------------------
 Write-Header "Running health check..."
 
