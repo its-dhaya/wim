@@ -26,7 +26,7 @@ return {
         },
     },
 
-    -- ---- Treesitter (syntax highlighting) ------------------
+    -- ---- Treesitter (syntax highlighting) -------------------
     {
         "nvim-treesitter/nvim-treesitter",
         build  = ":TSUpdate",

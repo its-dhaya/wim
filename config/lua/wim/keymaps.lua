@@ -12,7 +12,7 @@ map("n", "<C-l>", "<C-w>l",    "Move to right window")
 map("n", "<C-j>", "<C-w>j",    "Move to lower window")
 map("n", "<C-k>", "<C-w>k",    "Move to upper window")
 
--- ---- Resize windows ----------------------------------------
+-- ---- Resize windows -----------------------------------------
 map("n", "<C-Up>",    ":resize +2<CR>",          "Increase height")
 map("n", "<C-Down>",  ":resize -2<CR>",          "Decrease height")
 map("n", "<C-Left>",  ":vertical resize -2<CR>", "Decrease width")
