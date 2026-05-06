@@ -135,17 +135,17 @@ if vim.fn.has("win32") == 1 then
             local fname = orig_uri_to_fname(uri)
             -- Convert /mnt/c/... to C:\...
             fname = fname:gsub("^/mnt/(%a)/", function(drive)
-                return drive:upper() .. ":\"
+                return drive:upper() .. ":\\"
             end)
             -- Normalize remaining forward slashes
-            fname = fname:gsub("/", "\")
+            fname = fname:gsub("/", "\\")
             return fname
         end
 
         local orig_fname_to_uri = vim.uri_from_fname
         vim.uri_from_fname = function(fname)
             -- Normalize Windows paths before converting to URI
-            fname = fname:gsub("\", "/")
+            fname = fname:gsub("\\", "/")
             fname = fname:gsub("^(%a):/", function(drive)
                 return "/" .. drive:lower() .. "/"
             end)
