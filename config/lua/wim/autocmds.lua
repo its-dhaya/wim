@@ -85,8 +85,7 @@ vim.api.nvim_create_user_command("WimInfo", function()
         "  :Lazy             - plugin manager",
         "  :Mason            - LSP manager",
     }
-    vim.notify(table.concat(lines, "
-"), vim.log.levels.INFO, { title = "WIM" })
+    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "WIM" })
 end, { desc = "WIM: Show system info" })
 
 -- ---- Windows: clipboard reconnect after sleep/wake ---------------
